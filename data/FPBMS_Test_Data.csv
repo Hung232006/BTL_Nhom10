@@ -1,0 +1,26 @@
+﻿case_id,module,test_type,scenario,user_id,slot_id,order_id,amount,rate,tx_id,signature,pos_items,overtime_fee,hours_before,expected_status,expected_code,expected_output
+TC-03-01,Booking,Functional,Temporary slot locking for 10 minutes,U1,S1,O1,500000,0.3,,OK,,0,0,PENDING_PAYMENT,200,True
+TC-03-02,Booking,Concurrency,Concurrency race condition overbooking prevention,U1|U2,S1,O1,500000,0.3,,OK,,0,0,Slot taken,409,Slot taken
+TC-03-03,Booking,Boundary,Automatic slot release after 11-minute expiration,U1,S1,O1,500000,0.3,,OK,,0,0,AVAILABLE,200,AVAILABLE
+TC-03-04,Booking,Boundary,Slot lock retention at 9-minute mark,U1,S1,O1,500000,0.3,,OK,,0,0,PENDING_PAYMENT,200,PENDING_PAYMENT
+TC-03-05,Booking,Negative,Booking non-existent slot ID,U1,INVALID,O1,500000,0.3,,OK,,0,0,Invalid slot,404,False
+TC-03-06,Booking,Functional,Customer cancels own booking reservation,U1,S1,O1,500000,0.3,,OK,,0,0,CANCELLED_SUCCESS,200,True
+TC-03-07,Booking,Security,Block unauthorized booking cancellation by other user,U2,S1,O1,500000,0.3,,OK,,0,0,UNAUTHORIZED,403,False
+TC-04-01,Payment,Functional Math,Calculate 30% deposit requirement,U1,S1,O1,1000000,0.3,,OK,,0,0,300000,200,300000
+TC-04-02,Payment,Functional Math,Calculate 50% deposit requirement,U1,S1,O1,850000,0.5,,OK,,0,0,425000,200,425000
+TC-04-03,Payment,Functional Math,Calculate 100% full payment,U1,S1,O1,500000,1.0,,OK,,0,0,500000,200,500000
+TC-04-04,Payment,Security,Valid webhook HMAC digital signature verification,U1,S1,O1,1000,0.3,TX1,OK,,0,0,DEPOSITED,200,200
+TC-04-05,Payment,Security,Forged webhook HMAC digital signature rejection,U1,S1,O1,1000,0.3,TX1,BAD,,0,0,Invalid Signature,403,403
+TC-04-06,Payment,Negative,Reject webhook payload missing amount field,U1,S1,O1,MISSING,0.3,TX1,OK,,0,0,Missing amount,400,400
+TC-04-07,Payment,Negative,Reject webhook payload with mismatched order amount,U1,S1,O1,500,0.3,TX1,OK,,0,0,Mismatch,400,400
+TC-04-08,Payment,Integration,Idempotent transaction deduplication for duplicate TX_123,U1,S1,O1,1000,0.3,TX_123,OK,,0,0,Idempotent - Already processed,200,Idempotent - Already processed
+TC-04-09,Payment,Functional Math,Calculate 50% deposit refund calculation,U1,S1,O1,400000,0.5,,OK,,0,14,200000,200,200000
+TC-04-10,Payment,Performance,Webhook response latency SLA under 500ms,U1,S1,O1,1000,0.3,TX_PERF,OK,,0,0,LATENCY_UNDER_500MS,200,True
+TC-05-01,POS,Functional Inventory,Deduct 2 bottled drinks from inventory (remaining stock: 8),STAFF1,S1,O1,20000,0,,OK,water:2,0,0,STOCK_8,200,8
+TC-05-02,POS,Negative,Block selling out-of-stock item (bib stock = 0),STAFF1,S1,O1,5000,0,,OK,bib:1,0,0,OUT_OF_STOCK,400,False
+TC-05-03,POS,Functional Math,Calculate multi-item bill total (2 drinks + 1 bib = 25000),STAFF1,S1,O1,25000,0,,OK,"water:2,bib:1",0,0,25000,200,25000
+TC-05-04,POS,Boundary,Block negative item quantity entry (-1),STAFF1,S1,O1,0,0,,OK,water:-1,0,0,INVALID_QUANTITY,400,False
+TC-05-05,POS,Functional Inventory,Item removal restores inventory stock to 9,STAFF1,S1,O1,10000,0,,OK,water:1,0,0,STOCK_RESTORED_9,200,9
+TC-05-06,POS,Boundary,Sell exact available inventory limit (stock = 0),STAFF1,S1,O1,50000,0,,OK,water:5,0,0,STOCK_0,200,0
+TC-05-07,POS,Functional Billing,Apply overtime play fee to consolidated bill (20k + 30k = 50000),STAFF1,S1,O1,50000,0,,OK,water:2,30000,0,50000,200,50000
+TC-05-08,POS,Negative,Block negative overtime surcharge entry (-10000),STAFF1,S1,O1,0,0,,OK,water:2,-10000,0,INVALID_OVERTIME,400,False
